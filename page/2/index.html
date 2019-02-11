@@ -286,6 +286,134 @@
 </nav>
       <div class="body-wrap">
   
+    <article id="post-java-transient" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2018/12/01/java-transient/" class="article-date">
+      <time datetime="2018-11-30T16:28:17.000Z" itemprop="datePublished">2018-12-01</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2018/12/01/java-transient/">Java中的transient关键字</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+              <h3 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h3><blockquote>
+<p>在Java中，一个类只要实现Serializable接口，这个类的对象就可以被序列化，这种序列化模式为开发者提供了很多便利，我们可以不必关心具体序列化的过程，只要这个类实现了Serializable接口，这个类的所有属性都会自动序列化。但是有时我们需要让类的某些属性不被序列化，如密码这类信息，为了安全起见，不希望在网络操作中被传输或者持久化到本地。只要在相应的属性前加上<code>transient</code>关键字，就可以实现部分属性不被序列化，该属性的生命周期仅存于调用者的内存中而不会写入到磁盘持久化。</p>
+</blockquote>
+          
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+
+      
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java/">Java</a></li></ul>
+    </div>
+
+      
+        <p class="article-more-link">
+          <a href="/2018/12/01/java-transient/#more">阅读全文 >></a>
+        </p>
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+
+
+  
+    <article id="post-android-parcelable-serializable" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2018/11/30/android-parcelable-serializable/" class="article-date">
+      <time datetime="2018-11-30T14:44:44.000Z" itemprop="datePublished">2018-11-30</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2018/11/30/android-parcelable-serializable/">Android中的序列化：Parcelable和Serializable</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+              <h3 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h3><blockquote>
+<p>序列化：将一个对象转换成<code>可存储</code>或<code>可传输</code>的状态。</p>
+</blockquote>
+          
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+
+      
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Android/">Android</a></li></ul>
+    </div>
+
+      
+        <p class="article-more-link">
+          <a href="/2018/11/30/android-parcelable-serializable/#more">阅读全文 >></a>
+        </p>
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+
+
+  
     <article id="post-android-6-0-permission" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
@@ -783,135 +911,6 @@
       
         <p class="article-more-link">
           <a href="/2018/09/23/DiskLruCache-analyze/#more">阅读全文 >></a>
-        </p>
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
-
-
-
-
-
-
-
-
-
-  
-    <article id="post-LruCache-analyze" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2018/09/23/LruCache-analyze/" class="article-date">
-      <time datetime="2018-09-23T09:13:43.000Z" itemprop="datePublished">2018-09-23</time>
-</a>
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2018/09/23/LruCache-analyze/">LruCache解析</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-          
-              <h3 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h3><blockquote>
-<p><code>LRU</code>(Least Recently Used)，即最近最少使用算法，它的核心思想是当缓存满时，会优先淘汰那些近期最少使用的缓存对象。</p>
-<p>该算法被应用在<code>LruCache</code>和<code>DiskLruCache</code>，分别用于实现内存缓存和磁盘缓存。</p>
-</blockquote>
-          
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-
-      
-    <div class="article-tag tagcloud">
-        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Android/">Android</a></li></ul>
-    </div>
-
-      
-        <p class="article-more-link">
-          <a href="/2018/09/23/LruCache-analyze/#more">阅读全文 >></a>
-        </p>
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
-
-
-
-
-
-
-
-
-
-  
-    <article id="post-android-crash-handler" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2018/09/09/android-crash-handler/" class="article-date">
-      <time datetime="2018-09-09T15:32:35.000Z" itemprop="datePublished">2018-09-09</time>
-</a>
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2018/09/09/android-crash-handler/">Android全局异常处理</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-          
-              <h3 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h3><blockquote>
-<p>当Android应用程序出现未捕获的异常，都会弹出一个强制退出的弹框，在这种情况下，用户体验非常差。且发布到线上后，开发没法定位Bug的位置，这就需要一个能全局捕获异常，并且将这个异常log上传到服务器的功能。</p>
-</blockquote>
-          
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-
-      
-    <div class="article-tag tagcloud">
-        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Android/">Android</a></li></ul>
-    </div>
-
-      
-        <p class="article-more-link">
-          <a href="/2018/09/09/android-crash-handler/#more">阅读全文 >></a>
         </p>
       
       <div class="clearfix"></div>

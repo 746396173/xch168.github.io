@@ -15,20 +15,18 @@
 
 
 
-<meta name="description" content="概述 在Android Studio 2.2及更高的版本，可以使用CMake将C/C++代码编译到一个native library（即.so文件），然后打包到APK中。">
-<meta name="keywords" content="Android,NDK">
+<meta name="description" content="概述">
+<meta name="keywords" content="Android,Tools">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Android NDK开发-CMake">
-<meta property="og:url" content="https://xch168.github.io/2018/07/04/android-ndk-cmake/index.html">
+<meta property="og:title" content="LeakCanary原理分析">
+<meta property="og:url" content="https://xch168.github.io/2019/01/31/leakcanary-principle-analysis/index.html">
 <meta property="og:site_name" content="辉天神龙">
-<meta property="og:description" content="概述 在Android Studio 2.2及更高的版本，可以使用CMake将C/C++代码编译到一个native library（即.so文件），然后打包到APK中。">
+<meta property="og:description" content="概述">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="https://xch168.github.io/2018/07/04/android-ndk-cmake/cmake_build_cmd.png">
-<meta property="og:updated_time" content="2018-09-30T01:37:26.355Z">
+<meta property="og:updated_time" content="2019-02-01T01:33:13.700Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Android NDK开发-CMake">
-<meta name="twitter:description" content="概述 在Android Studio 2.2及更高的版本，可以使用CMake将C/C++代码编译到一个native library（即.so文件），然后打包到APK中。">
-<meta name="twitter:image" content="https://xch168.github.io/2018/07/04/android-ndk-cmake/cmake_build_cmd.png">
+<meta name="twitter:title" content="LeakCanary原理分析">
+<meta name="twitter:description" content="概述">
 
 <link rel="apple-touch-icon" href= "/apple-touch-icon.png">
 
@@ -60,7 +58,7 @@
 <link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
 
 
-<title>Android NDK开发-CMake | 辉天神龙</title>
+<title>LeakCanary原理分析 | 辉天神龙</title>
 
 <script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
 <script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
@@ -286,11 +284,11 @@
     </div>
     <link class="menu-list" tags="标签" friends="友情链接" about="关于我"/>
 </nav>
-      <div class="body-wrap"><article id="post-android-ndk-cmake" class="article article-type-post" itemscope itemprop="blogPost">
+      <div class="body-wrap"><article id="post-leakcanary-principle-analysis" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
-      <a href="/2018/07/04/android-ndk-cmake/" class="article-date">
-      <time datetime="2018-07-04T12:52:42.000Z" itemprop="datePublished">2018-07-04</time>
+      <a href="/2019/01/31/leakcanary-principle-analysis/" class="article-date">
+      <time datetime="2019-01-31T15:01:19.000Z" itemprop="datePublished">2019-01-31</time>
 </a>
     </div>
   
@@ -303,7 +301,7 @@
         
   
     <h1 class="article-title" itemprop="name">
-      Android NDK开发-CMake
+      LeakCanary原理分析
     </h1>
   
 
@@ -314,7 +312,7 @@
 
         
     <div class="article-tag tagcloud">
-        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Android/">Android</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/NDK/">NDK</a></li></ul>
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Android/">Android</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Tools/">Tools</a></li></ul>
     </div>
 
         <div class="clearfix"></div>
@@ -325,95 +323,12 @@
       
           
         <h3 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h3><blockquote>
-<p>在Android Studio 2.2及更高的版本，可以使用<code>CMake</code>将C/C++代码编译到一个native library（即.so文件），然后打包到APK中。</p>
 </blockquote>
 <a id="more"></a>
-<h3 id="在Gradle中配置CMake变量"><a href="#在Gradle中配置CMake变量" class="headerlink" title="在Gradle中配置CMake变量"></a>在Gradle中配置CMake变量</h3><figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">android &#123;</span><br><span class="line">  ...</span><br><span class="line">  defaultConfig &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">// 用于配置Cmake构建参数</span></span><br><span class="line">    externalNativeBuild &#123;</span><br><span class="line">      cmake &#123;</span><br><span class="line">        ...</span><br><span class="line">        <span class="comment">// 将参数传递给变量时，请使用以下语法：</span></span><br><span class="line">        <span class="comment">// arguments "-DVAR_NAME=ARGUMENT".</span></span><br><span class="line">        arguments <span class="string">"-DANDROID_ARM_NEON=TRUE"</span>,</span><br><span class="line">        <span class="comment">// 如果要将多个参数传递给变量, 使用以下语法一起传递:</span></span><br><span class="line">        <span class="comment">// arguments "-DVAR_NAME=ARG_1 ARG_2"</span></span><br><span class="line">        <span class="comment">// 下面一行将 'rtti' 和 'exceptions' 传递给 'ANDROID_CPP_FEATURES'.</span></span><br><span class="line">                  <span class="string">"-DANDROID_CPP_FEATURES=rtti exceptions"</span></span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  buildTypes &#123;...&#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 用于链接CMake脚本</span></span><br><span class="line">  externalNativeBuild &#123;</span><br><span class="line">      cmake &#123;</span><br><span class="line">          path <span class="string">"CMakeLists.txt"</span></span><br><span class="line">      &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>CMake部分构建变量列表：</p>
-<table>
-<thead>
-<tr>
-<th>变量名</th>
-<th>参数</th>
-<th>描述</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>ANDROID_TOOLCHAIN</td>
-<td>clang(默认)</td>
-<td>指定CMake应该使用的编译器工具链</td>
-</tr>
-<tr>
-<td>ANDROID_PLATFORM</td>
-<td>android-19</td>
-<td>指定Android的目标平台</td>
-</tr>
-<tr>
-<td>ANDROID_CPP_FEATURES</td>
-<td>默认为空，可配置：<br>rtti（RunTime Type Information）：运行时类型信息<br> exceptions: 指示代码使用C++异常</td>
-<td>指定CMake编译时需要使用某些C++特性</td>
-</tr>
-<tr>
-<td>ANDROID_ARM_MODE</td>
-<td>thumb（默认）<br>arm</td>
-<td>指定是arm还是以thumb模式生成ARM目标二进制库</td>
-</tr>
-</tbody>
-</table>
-<h3 id="CMake构建命令"><a href="#CMake构建命令" class="headerlink" title="CMake构建命令"></a>CMake构建命令</h3><p>Android Studio在<code>cmake_build_command.txt</code>文件中保存用于执行CMake构建的构建参数。</p>
-<p>Android Studio会为每个ABI和每个构建类型创建<code>cmake_build_command.txt</code>，放置在如下目录：</p>
-<blockquote>
-<p>&lt;project-root&gt;/&lt;module-root&gt;/.externalNativeBuild/cmake/&lt;build-type&gt;/&lt;ABI&gt;/</p>
-</blockquote>
-<p><img src="/2018/07/04/android-ndk-cmake/cmake_build_cmd.png" alt="cmake-build-cmd"></p>
-<p>示例：debug模式下的<code>armeabi-v7a</code>的CMake构建命令</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">Executable : /Users/xch/Library/Android/sdk/cmake/3.6.4111459/bin/cmake</span><br><span class="line">arguments : </span><br><span class="line">-H/Users/xch/debug/Android/NDKDemo2/app</span><br><span class="line">-B/Users/xch/debug/Android/NDKDemo2/app/.externalNativeBuild/cmake/debug/armeabi-v7a</span><br><span class="line">-DANDROID_ABI=armeabi-v7a</span><br><span class="line">-DANDROID_PLATFORM=android-19</span><br><span class="line">-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=/Users/xch/debug/Android/NDKDemo2/app/build/intermediates/cmake/debug/obj/armeabi-v7a</span><br><span class="line">-DCMAKE_BUILD_TYPE=Debug</span><br><span class="line">-DANDROID_NDK=/Users/xch/Library/Android/sdk/ndk-bundle</span><br><span class="line">-DCMAKE_CXX_FLAGS=-frtti -fexceptions</span><br><span class="line">-DCMAKE_TOOLCHAIN_FILE=/Users/xch/Library/Android/sdk/ndk-bundle/build/cmake/android.toolchain.cmake</span><br><span class="line">-DCMAKE_MAKE_PROGRAM=/Users/xch/Library/Android/sdk/cmake/3.6.4111459/bin/ninja</span><br><span class="line">-GAndroid Gradle - Ninja</span><br><span class="line">jvmArgs :</span><br></pre></td></tr></table></figure>
-<p>这些构建参数是Gradle插件基于<code>build.gradle</code>的配置自动生成。</p>
-<p>CMake构建参数列表：</p>
-<table>
-<thead>
-<tr>
-<th>构建参数</th>
-<th>描述</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>-G  &lt;build-system&gt;</td>
-<td>Android Gradle - Ninja是Android Studio唯一支持的C/C++构建系统.CMake会生成<code>android_gradle_build.json</code>文件。 其中包含有关CMake构建的Gradle插件的元数据，例如编译器标志和目标名称。</td>
-</tr>
-<tr>
-<td>-DANDROID_ABI &lt;abi&gt;</td>
-<td>目标ABI</td>
-</tr>
-<tr>
-<td>-DCMAKE_LIBRARY_OUTPUT_DIRECTORY &lt;path&gt;</td>
-<td>CMake生成的库的位置</td>
-</tr>
-<tr>
-<td>-DCMAKE_TOOLCHAIN_FILE &lt;path&gt;</td>
-<td>CMake用于交叉编译的<code>android.toolchain.cmake</code>文件的路径</td>
-</tr>
-</tbody>
-</table>
-<h3 id="CMakeList-txt文件说明"><a href="#CMakeList-txt文件说明" class="headerlink" title="CMakeList.txt文件说明"></a>CMakeList.txt文件说明</h3><figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"># 指定CMake编译器的最低版本</span><br><span class="line">cmake_minimum_required(VERSION <span class="number">3.4</span><span class="number">.1</span>)</span><br><span class="line"></span><br><span class="line"># 要求CMake根据指定的源文件生成库</span><br><span class="line">add_library( # 生成的库的名称</span><br><span class="line">             native-lib</span><br><span class="line"></span><br><span class="line">             # 设置生成的库的类型</span><br><span class="line">             SHARED</span><br><span class="line"></span><br><span class="line">             # 所有需要加入到这个库的源文件</span><br><span class="line">             src<span class="regexp">/main/</span>cpp/native-lib.cpp )</span><br><span class="line"></span><br><span class="line"># 如果需要使用系统预构建库，可以使用该方法来查找，比如这里的log库</span><br><span class="line">find_library( # 该变量保存所要关联库的路径</span><br><span class="line">              log-lib</span><br><span class="line"></span><br><span class="line">              # 需要关联的库名称</span><br><span class="line">              log )</span><br><span class="line"></span><br><span class="line"># 指定需要关联的库</span><br><span class="line">target_link_libraries( # 目标库文件</span><br><span class="line">                       native-lib</span><br><span class="line"></span><br><span class="line">                       # 需要在目标库文件中使用的库</span><br><span class="line">                       $&#123;log-lib&#125; )</span><br></pre></td></tr></table></figure>
-<p>在上面使用<code>add_library</code>来添加系统的预构建库。如果要添加其他的非系统的预构建库，比较FFmpeg的相关库，需要按如下格式：</p>
-<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"># 添加第三方非系统预构建库</span><br><span class="line">add_library( # 导入的库的名称</span><br><span class="line">    		 imported-lib</span><br><span class="line">            </span><br><span class="line">             # 导入的库的类型</span><br><span class="line">             SHARED</span><br><span class="line">            </span><br><span class="line">             # 表示是导入第三方库</span><br><span class="line">             IMPORTED )</span><br><span class="line"></span><br><span class="line"># 指定库的路径</span><br><span class="line">set_target_properties( # 指定导入的库的名称</span><br><span class="line">                       imported-lib</span><br><span class="line"></span><br><span class="line">                       # Specifies the parameter you want to define.</span><br><span class="line">                       PROPERTIES IMPORTED_LOCATION</span><br><span class="line"></span><br><span class="line">                       # 指定要导入的库的路径</span><br><span class="line">                       imported-lib<span class="regexp">/src/</span>$&#123;ANDROID_ABI&#125;/libimported-lib.so )</span><br><span class="line"></span><br><span class="line"># 包含头文件的路径</span><br><span class="line">include_directories( imported-lib<span class="regexp">/include/</span> )</span><br></pre></td></tr></table></figure>
-<p>如果要显示执行构建过程中的详细信息，比如为了得到更详细的出错信息。</p>
-<p>运行后在<code>.externalNativeBuild/cmake/debug/{abi}/cmake_build_output.txt</code>查看log</p>
-<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"># 开启输出详细的编译和链接信息</span><br><span class="line">set(CMAKE_VERBOSE_MAKEFILE on)</span><br><span class="line"></span><br><span class="line">message(STATUS <span class="string">"要打印的信息"</span>)</span><br></pre></td></tr></table></figure>
-<p>自定义变量</p>
-<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">set(变量名 变量值)</span><br></pre></td></tr></table></figure>
-<p>常用变量</p>
-<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"># 引用变量格式：$&#123;变量名&#125;</span><br><span class="line"></span><br><span class="line"># 工程的源文件目录</span><br><span class="line">PROJECT_SOURCE_DIR </span><br><span class="line"># CMakeList.txt文件所在的目录</span><br><span class="line">CMAKE_SOURCE_DIR</span><br></pre></td></tr></table></figure>
 <h3 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h3><ol>
-<li><a href="https://developer.android.com/ndk/guides/cmake" target="_blank" rel="noopener">CMake</a></li>
-<li><a href="https://juejin.im/post/5a30fa9b6fb9a0450167f43e" target="_blank" rel="noopener">使用 CMake 进行 NDK 开发之如何编写 CMakeLists txt 脚本</a></li>
-<li><a href="https://blog.csdn.net/guiying712/article/details/75452193" target="_blank" rel="noopener">JNI和NDK编程-使用AndroidStudio进行NDK开发</a></li>
-<li><a href="https://juejin.im/post/595da4e25188250d8b65ddbf" target="_blank" rel="noopener">Android NDK开发扫盲及最新CMake的编译使用</a></li>
-<li><a href="https://cmake.org/cmake/help/latest/manual/cmake-commands.7.html" target="_blank" rel="noopener"><a href="https://cmake.org/cmake/help/latest/manual/cmake-commands.7.html#id2" target="_blank" rel="noopener">cmake-commands</a></a></li>
-<li><a href="https://blog.csdn.net/qq_34902522/article/details/78144127" target="_blank" rel="noopener">通过CMake来进行ndk开发之补充篇</a></li>
+<li><a href="https://jsonchao.github.io/2019/01/06/Android%E4%B8%BB%E6%B5%81%E4%B8%89%E6%96%B9%E5%BA%93%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%EF%BC%88%E5%85%AD%E3%80%81%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3Leakcanary%E6%BA%90%E7%A0%81%EF%BC%89/" target="_blank" rel="noopener">深入理解Leakcanary源码</a></li>
+<li><a href="https://www.liaohuqiu.net/cn/posts/leak-canary-read-me/" target="_blank" rel="noopener">LeakCanary中文使用说明</a></li>
+<li><a href="https://www.liaohuqiu.net/cn/posts/leak-canary/" target="_blank" rel="noopener">LeakCanary:让内存泄漏无所遁形</a></li>
 </ol>
 
       
@@ -423,13 +338,13 @@
   
     
     <div class="copyright">
-        <p><span>本文标题:</span><a href="/2018/07/04/android-ndk-cmake/">Android NDK开发-CMake</a></p>
+        <p><span>本文标题:</span><a href="/2019/01/31/leakcanary-principle-analysis/">LeakCanary原理分析</a></p>
         <p><span>文章作者:</span><a href="/" title="回到主页">辉天神龙</a></p>
-        <p><span>发布时间:</span>2018-07-04, 20:52:42</p>
-        <p><span>最后更新:</span>2018-09-30, 09:37:26</p>
+        <p><span>发布时间:</span>2019-01-31, 23:01:19</p>
+        <p><span>最后更新:</span>2019-02-01, 09:33:13</p>
         <p>
-            <span>原始链接:</span><a class="post-url" href="/2018/07/04/android-ndk-cmake/" title="Android NDK开发-CMake">https://xch168.github.io/2018/07/04/android-ndk-cmake/</a>
-            <span class="copy-path" data-clipboard-text="原文: https://xch168.github.io/2018/07/04/android-ndk-cmake/　　作者: 辉天神龙" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <span>原始链接:</span><a class="post-url" href="/2019/01/31/leakcanary-principle-analysis/" title="LeakCanary原理分析">https://xch168.github.io/2019/01/31/leakcanary-principle-analysis/</a>
+            <span class="copy-path" data-clipboard-text="原文: https://xch168.github.io/2019/01/31/leakcanary-principle-analysis/　　作者: 辉天神龙" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
             <script> var clipboard = new Clipboard('.copy-path'); </script>
         </p>
         <p>
@@ -441,16 +356,10 @@
 
     <nav id="article-nav">
         
-            <div id="article-nav-newer" class="article-nav-title">
-                <a href="/2018/07/08/android-ndk-jni/">
-                    Android NDK开发-JNI
-                </a>
-            </div>
-        
         
             <div id="article-nav-older" class="article-nav-title">
-                <a href="/2018/07/01/android-ndk-environment/">
-                    Android NDK开发-环境搭建
+                <a href="/2019/01/31/android-memory-leak-analysis/">
+                    Android内存泄漏分析
                 </a>
             </div>
         
@@ -461,7 +370,7 @@
 
     <div id="toc" class="toc-article">
     <strong class="toc-title">文章目录</strong>
-    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#概述"><span class="toc-number">1.</span> <span class="toc-text">概述</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#在Gradle中配置CMake变量"><span class="toc-number">2.</span> <span class="toc-text">在Gradle中配置CMake变量</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#CMake构建命令"><span class="toc-number">3.</span> <span class="toc-text">CMake构建命令</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#CMakeList-txt文件说明"><span class="toc-number">4.</span> <span class="toc-text">CMakeList.txt文件说明</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#参考链接"><span class="toc-number">5.</span> <span class="toc-text">参考链接</span></a></li></ol>
+    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#概述"><span class="toc-number">1.</span> <span class="toc-text">概述</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#参考链接"><span class="toc-number">2.</span> <span class="toc-text">参考链接</span></a></li></ol>
 </div>
 <style>
     .left-col .switch-btn,
@@ -492,7 +401,7 @@
         </div>
         <script>
             window._bd_share_config={
-                "common":{"bdSnsKey":{},"bdText":"Android NDK开发-CMake　| 辉天神龙　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+                "common":{"bdSnsKey":{},"bdText":"LeakCanary原理分析　| 辉天神龙　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
         </script>
     
 
@@ -508,7 +417,7 @@
     
       <div class="duoshuo" id="comments">
     <div id="comment-box" ></div>
-    <div class="ds-thread" id="ds-thread" data-thread-key="2018/07/04/android-ndk-cmake/" data-title="Android NDK开发-CMake" data-url="https://xch168.github.io/2018/07/04/android-ndk-cmake/"></div>
+    <div class="ds-thread" id="ds-thread" data-thread-key="2019/01/31/leakcanary-principle-analysis/" data-title="LeakCanary原理分析" data-url="https://xch168.github.io/2019/01/31/leakcanary-principle-analysis/"></div>
     <script>
         var duoshuoQuery = {short_name:"xch168"};
         var loadComment = function(){
@@ -531,15 +440,13 @@
 
     <div class="scroll" id="post-nav-button">
         
-            <a href="/2018/07/08/android-ndk-jni/" title="上一篇: Android NDK开发-JNI">
-                <i class="fa fa-angle-left"></i>
-            </a>
+            <a href="/" title="回到主页"><i class="fa fa-home"></i></a>
         
 
         <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
 
         
-            <a href="/2018/07/01/android-ndk-environment/" title="下一篇: Android NDK开发-环境搭建">
+            <a href="/2019/01/31/android-memory-leak-analysis/" title="下一篇: Android内存泄漏分析">
                 <i class="fa fa-angle-right"></i>
             </a>
         
